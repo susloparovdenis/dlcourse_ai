@@ -15,7 +15,20 @@ def softmax(predictions):
     '''
     # TODO implement softmax
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
+    predictions = np.array(predictions)
+    predictions = predictions - np.max(predictions, axis=-1, keepdims=True)
+
+    exp_preds = np.exp(predictions)
+    denom = np.sum(exp_preds, axis=-1, keepdims=True)
+    return exp_preds / denom
+
+
+def get_one_hot(target_index, num_classes):
+    target_index = np.array(target_index)
+    one_hot = np.identity(num_classes)[target_index.flat]
+    if one_hot.ndim > 2:
+        return one_hot[0]
+    return one_hot.squeeze()
 
 
 def cross_entropy_loss(probs, target_index):
@@ -33,7 +46,12 @@ def cross_entropy_loss(probs, target_index):
     '''
     # TODO implement cross-entropy
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
+
+    probs = np.array(probs)
+    num_classes = probs.shape[-1]
+    one_hot = get_one_hot(target_index, num_classes)
+
+    return np.mean(np.sum(-np.log(probs) * one_hot, axis=-1))
 
 
 def softmax_with_cross_entropy(predictions, target_index):
@@ -52,9 +70,14 @@ def softmax_with_cross_entropy(predictions, target_index):
       dprediction, np array same shape as predictions - gradient of predictions by loss value
     '''
     # TODO implement softmax with cross-entropy
-    # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
+    pred_probs = softmax(predictions)
+    batch_size = pred_probs.shape[0] if pred_probs.ndim > 1 else 1
+    loss = cross_entropy_loss(pred_probs, target_index)
 
+    num_classes = predictions.shape[-1]
+    dprediction = pred_probs - get_one_hot(target_index, num_classes)
+    dprediction = dprediction / batch_size
+    # print(loss, dprediction)
     return loss, dprediction
 
 
@@ -73,10 +96,11 @@ def l2_regularization(W, reg_strength):
 
     # TODO: implement l2 regularization and gradient
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
+    loss = np.sum(np.power(W, 2)) * reg_strength
+    grad = 2 * W * reg_strength
 
     return loss, grad
-    
+
 
 def linear_softmax(X, W, target_index):
     '''
@@ -95,9 +119,11 @@ def linear_softmax(X, W, target_index):
     predictions = np.dot(X, W)
 
     # TODO implement prediction and gradient over W
+    loss, grad = softmax_with_cross_entropy(predictions, target_index)
+
+    dW = np.dot(X.T, grad)
     # Your final implementation shouldn't have any loops
-    raise Exception("Not implemented!")
-    
+
     return loss, dW
 
 
@@ -121,7 +147,7 @@ class LinearSoftmaxClassifier():
 
         num_train = X.shape[0]
         num_features = X.shape[1]
-        num_classes = np.max(y)+1
+        num_classes = np.max(y) + 1
         if self.W is None:
             self.W = 0.001 * np.random.randn(num_features, num_classes)
 
@@ -137,11 +163,18 @@ class LinearSoftmaxClassifier():
             # Apply gradient to weights using learning rate
             # Don't forget to add both cross-entropy loss
             # and regularization!
-            raise Exception("Not implemented!")
+            X_batches = X[batches_indices, :]
+            y_batches = y.copy().reshape([-1, 1])[batches_indices, :]
 
-            # end
+            for i in range(len(X_batches)):
+                bx, by = X_batches[i], y_batches[i]
+                loss, dW = linear_softmax(bx, self.W, by)
+                l2_loss, l2_dw = l2_regularization(self.W, reg)
+                self.W = self.W - learning_rate * (dW+l2_dw)
+                loss += l2_loss
+
             print("Epoch %i, loss: %f" % (epoch, loss))
-
+            loss_history.append(loss)
         return loss_history
 
     def predict(self, X):
@@ -158,15 +191,6 @@ class LinearSoftmaxClassifier():
 
         # TODO Implement class prediction
         # Your final implementation shouldn't have any loops
-        raise Exception("Not implemented!")
-
+        pred = np.dot(X, self.W)
+        y_pred = np.argmax(pred, axis=1)
         return y_pred
-
-
-
-                
-                                                          
-
-            
-
-                
