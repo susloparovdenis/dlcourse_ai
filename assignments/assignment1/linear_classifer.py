@@ -132,7 +132,7 @@ class LinearSoftmaxClassifier():
         self.W = None
 
     def fit(self, X, y, batch_size=100, learning_rate=1e-7, reg=1e-5,
-            epochs=1):
+            epochs=1, report=False):
         '''
         Trains linear classifier
         
@@ -172,9 +172,10 @@ class LinearSoftmaxClassifier():
                 l2_loss, l2_dw = l2_regularization(self.W, reg)
                 self.W = self.W - learning_rate * (dW+l2_dw)
                 loss += l2_loss
-
-            print("Epoch %i, loss: %f" % (epoch, loss))
+            if report:
+                print("Epoch %i, loss: %f" % (epoch, loss))
             loss_history.append(loss)
+        print("Final epoch %i, loss: %f" % (epoch, loss))
         return loss_history
 
     def predict(self, X):
