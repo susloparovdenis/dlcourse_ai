@@ -3,3 +3,4 @@
 **/gradient_check-checkpoints/*
 **/.idea/*
 **/.ipynb_checkpoints/*
+**/*.pyc
