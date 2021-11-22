@@ -1,5 +1,7 @@
 import numpy as np
 
+from assignments.assignment1.linear_classifer import cross_entropy_loss, get_one_hot, softmax
+
 
 def l2_regularization(W, reg_strength):
     """
@@ -13,7 +15,6 @@ def l2_regularization(W, reg_strength):
       loss, single value - l2 regularization loss
       gradient, np.array same shape as W - gradient of weight by l2 loss
     """
-    # TODO: Copy from the previous assignment
     loss = np.sum(np.power(W, 2)) * reg_strength
     grad = 2 * W * reg_strength
 
@@ -35,10 +36,14 @@ def softmax_with_cross_entropy(preds, target_index):
       loss, single value - cross-entropy loss
       dprediction, np array same shape as predictions - gradient of predictions by loss value
     """
-    # TODO: Copy from the previous assignment
-    raise Exception("Not implemented!")
+    pred_probs = softmax(preds)
+    batch_size = pred_probs.shape[0] if pred_probs.ndim > 1 else 1
+    loss = cross_entropy_loss(pred_probs, target_index)
 
-    return loss, d_preds
+    num_classes = preds.shape[-1]
+    dprediction = pred_probs - get_one_hot(target_index, num_classes)
+    dprediction = dprediction / batch_size
+    return loss, dprediction
 
 
 class Param:
@@ -57,7 +62,7 @@ class ReLULayer:
         pass
 
     def forward(self, X):
-        # TODO: Implement forward pass
+        # Implement forward pass
         # Hint: you'll need to save some information about X
         # to use it later in the backward pass
         res = np.maximum(X,0)
@@ -71,13 +76,13 @@ class ReLULayer:
 
         Arguments:
         d_out, np array (batch_size, num_features) - gradient
-           of loss function with respect to output
+        of loss function with respect to output
 
         Returns:
         d_result: np array (batch_size, num_features) - gradient
           with respect to input
         """
-        # TODO: Implement backward pass
+        # Implement backward pass
         # Your final implementation shouldn't have any loops
         
         d_result = self.grad *d_out
@@ -95,7 +100,7 @@ class FullyConnectedLayer:
         self.X = None
 
     def forward(self, X):
-        # TODO: Implement forward pass
+        # Implement forward pass
         # Your final implementation shouldn't have any loops
         self.X = X
         return np.dot(X, self.W.value) + self.B.value
@@ -108,7 +113,7 @@ class FullyConnectedLayer:
 
         Arguments:
         d_out, np array (batch_size, n_output) - gradient
-           of loss function with respect to output
+        of loss function with respect to output
 
         Returns:
         d_result: np array (batch_size, n_input) - gradient
@@ -123,7 +128,7 @@ class FullyConnectedLayer:
         # the previous assignment
 
         self.W.grad += np.dot(self.X.T, d_out)
-        self.B.grad += np.sum(d_out, axis=0)[np.newaxis, :]
+        self.B.grad += np.sum(d_out, axis=0)[None, :]
         return np.dot(d_out, self.W.value.T)
       
 
