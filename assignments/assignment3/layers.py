@@ -124,11 +124,24 @@ class ConvolutionalLayer:
         
         # It's ok to use loops for going over width and height
         # but try to avoid having any other loops
+        out_height = int((height+self.padding*2)-self.filter_size)+1
+        out_width = int((width+self.padding*2)-self.filter_size)+1
+
+        output = np.zeros((batch_size, out_height, out_width, self.out_channels))
+        padded = np.zeros((batch_size, height+self.padding*2, width+self.padding*2, channels))
+        W = self.W.value
+        conv_size = channels*self.filter_size*self.filter_size
+        
+        padded[:,self.padding:height,self.padding:width,:] = X
         for y in range(out_height):
             for x in range(out_width):
                 # TODO: Implement forward pass for specific location
-                pass
-        raise Exception("Not implemented!")
+                patch = padded[:,self.padding+y:self.filter_size, self.padding+x:self.filter_size,:]
+                patch = patch.reshape((batch_size,conv_size))
+                W_reshaped = W.reshape((conv_size, self.out_channels))
+                output[:,y,x,:] = patch @ W_reshaped
+        self.output = output
+        return output
 
 
     def backward(self, d_out):
@@ -148,6 +161,8 @@ class ConvolutionalLayer:
         # Try to avoid having any other loops here too
         for y in range(out_height):
             for x in range(out_width):
+                dout_col = dout_tr[:, :, y, x]
+                np.resize
                 # TODO: Implement backward pass for specific location
                 # Aggregate gradients for both the input and
                 # the parameters (W and B)
